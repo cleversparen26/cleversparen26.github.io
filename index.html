@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f6b4f">
+<title>Haushaltsplan</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+/* Haushaltsplan: eine ruhige Spalte, feste Menüleiste oben, grosse Schrift, alles auf dem Gerät */
+:root{
+  --bg:#f3f5f1; --paper:#ffffff; --fg:#1d2420; --muted:#5d6a62; --line:#d9dfd8;
+  --accent:#2f6b4f; --accent-fg:#ffffff; --warn:#a4501c; --danger:#b42318; --p1:#2f6b8f; --p2:#a4508f;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#141916; --paper:#1d2420; --fg:#e8eee9; --muted:#9fb0a5; --line:#2f3a33;
+  --accent:#6fc195; --accent-fg:#0f1a14; --warn:#f0a36b; --danger:#ff8a80; --p1:#7fb6d9; --p2:#d99bc8; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:18px;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:18px}
+h1{font-size:1.5rem;margin:0}
+h2{font-size:1.15rem;margin:0 0 12px}
+h3{margin:0;font-size:1.05rem}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.month{display:flex;align-items:center;gap:8px}
+.month span{font-weight:700;min-width:8.5em;text-align:center}
+.iconbtn{width:48px;height:48px;border-radius:10px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-size:1.3rem}
+.tabs{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:6px 4px;margin:0 -4px;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabs button{min-height:52px;border:0;border-radius:10px;background:transparent;font-weight:700;font-size:.95rem;cursor:pointer;color:var(--muted);padding:4px 2px;line-height:1.15;overflow-wrap:anywhere}
+.tabs button[aria-current="page"]{background:var(--accent);color:var(--accent-fg)}
+.view{display:flex;flex-direction:column;gap:18px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px}
+.label{color:var(--muted);font-size:.85rem;letter-spacing:.04em;text-transform:uppercase}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.over{color:var(--warn)}
+.sub{color:var(--muted);font-size:.9rem}
+.hero{background:var(--accent);color:var(--accent-fg);border-radius:16px;padding:20px}
+.hero .label{color:inherit;opacity:.85}
+.hero.warn{background:var(--warn)}
+.herobig{font-size:2.5rem;font-weight:700;line-height:1.1;margin:4px 0;text-align:left}
+.herosub{font-size:1rem;opacity:.9}
+.heropart{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.35);font-size:1rem}
+.heropart:empty{display:none}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.cardbig{font-size:1.45rem;font-weight:700;text-align:left}
+.meter{height:12px;border-radius:6px;background:var(--line);margin-top:8px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);width:0}
+.meter.over i{background:var(--warn)}
+.primary{min-height:58px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:1.15rem;cursor:pointer}
+.primary:disabled{opacity:.6}
+.small{border:1px solid var(--line);background:transparent;border-radius:8px;min-height:46px;padding:0 14px;cursor:pointer;color:var(--fg)}
+.small.danger{border-color:var(--danger);color:var(--danger);font-weight:700}
+form,.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.wide{grid-column:1/-1}
+label{font-weight:700;font-size:1rem}
+input,select{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg);min-height:52px;width:100%;font-size:18px}
+input[type=checkbox]{width:28px;height:28px;min-height:0}
+.msg{margin:0;font-size:1rem;color:var(--muted)}
+.msg.err{color:var(--danger)}
+.split{display:flex;flex-wrap:wrap;gap:6px 24px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:1rem}
+.cats{display:flex;flex-direction:column;gap:10px}
+.cat{display:grid;grid-template-columns:minmax(0,9em) 1fr auto;gap:12px;align-items:center;font-size:1rem}
+.track{height:14px;background:var(--line);border-radius:7px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--accent)}
+.day{border-top:2px dashed var(--line);padding-top:12px;margin-top:12px}
+.day:first-child{border-top:0;margin-top:0;padding-top:0}
+.dayhead{display:flex;justify-content:space-between;color:var(--muted);font-size:1rem;margin-bottom:6px}
+.row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:8px 0}
+.what{min-width:0;overflow-wrap:anywhere}
+.empty{color:var(--muted);margin:0}
+.psum{display:grid;grid-template-columns:1fr auto;gap:6px 16px;font-size:1.05rem}
+.psum .big2{font-weight:700;font-size:1.2rem;border-top:1px solid var(--line);padding-top:8px}
+.pcards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.pcard{border-radius:12px;padding:12px;border:2px solid var(--line);min-width:0}
+.pcard.p1{border-color:var(--p1)}.pcard.p2{border-color:var(--p2)}
+.pcname{font-weight:700;overflow-wrap:anywhere}
+.pcbig{font-size:1.3rem;font-weight:700;text-align:left;margin:2px 0}
+.pcard .sub{font-size:.85rem;line-height:1.45}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 6px}
+.chips button{flex:0 0 auto;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-weight:700;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;padding:1px 8px;border-radius:999px;vertical-align:middle;margin-left:4px;border:1px solid var(--line);color:var(--muted)}
+.badge.p1{color:var(--p1);border-color:var(--p1)}.badge.p2{color:var(--p2);border-color:var(--p2)}
+.pgroup{margin-top:10px}
+.pghead{width:100%;display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;min-height:60px;font-size:1.1rem;font-weight:700}
+.pgroup.isopen .pghead{border-color:var(--accent)}
+.pgplus{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-size:1.4rem;line-height:1}
+.pgname{min-width:0;overflow-wrap:anywhere}.pgname .sub{display:block;font-weight:400;font-size:.85rem}
+.pgbody{padding:4px 4px 8px 12px}
+.pitem,.orow{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.orow:last-child{border-bottom:0}
+.tick{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:transparent;cursor:pointer;font-size:1.3rem;line-height:1;color:transparent}
+.tick.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.tick:disabled{opacity:.35;cursor:default}
+.pname{background:none;border:0;padding:4px 0;text-align:left;cursor:pointer;font-size:1.05rem;min-height:44px;min-width:0;overflow-wrap:anywhere}
+.pname .sub{display:block;font-size:.88rem}
+.need{color:var(--warn)}
+.addp{margin-top:8px;border:1px dashed var(--line);background:transparent;border-radius:8px;min-height:44px;padding:0 14px;cursor:pointer;color:var(--accent);font-weight:700}
+.pedit{border:2px solid var(--accent);border-radius:12px;padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:12px;background:var(--paper)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.actions .primary{flex:1 1 140px;min-height:50px}
+.fixrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0}
+.fixrow.total{font-size:1.1rem;border-top:1px solid var(--line)}
+.setrow{display:flex;align-items:center;gap:12px;min-height:52px}
+.setrow label{font-weight:400}
+.note{color:var(--muted);font-size:.92rem;margin:0}
+.filebtn{display:inline-flex;align-items:center}
+.foot{color:var(--muted);font-size:.85rem;text-align:center;margin:0}
+[hidden]{display:none!important}
+@media (max-width:520px){form,.grid2{grid-template-columns:1fr}}
+@media (max-width:380px){.cards,.pcards{grid-template-columns:1fr}.tabs button{font-size:.82rem}.herobig{font-size:2.1rem}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top">
+    <h1 data-t="appName">Haushaltsplan</h1>
+    <div class="month">
+      <button class="iconbtn" id="prev" type="button" data-ta="prevMonth" aria-label="Vorheriger Monat">‹</button>
+      <span id="monthLabel">–</span>
+      <button class="iconbtn" id="next" type="button" data-ta="nextMonth" aria-label="Nächster Monat">›</button>
+    </div>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button type="button" data-tab="start" data-t="tabStart">Übersicht</button>
+    <button type="button" data-tab="ausgaben" data-t="tabSpend">Ausgaben</button>
+    <button type="button" data-tab="plan" data-t="tabPlan">Plan</button>
+    <button type="button" data-tab="mehr" data-t="tabMore">Mehr</button>
+  </nav>
+
+  <!-- ÜBERSICHT -->
+  <section class="view" data-view="start">
+    <div class="hero" id="heroCard">
+      <div class="label" data-t="freeTitle">Diesen Monat frei verfügbar</div>
+      <div class="herobig num" id="heroFree">–</div>
+      <div class="herosub" id="heroSub"></div>
+      <div class="heropart" id="heroPart"></div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="label" data-t="budgetTitle">Budget Einkauf &amp; Auto</div><div class="cardbig num" id="cBudget">–</div><div class="sub" id="cBudgetSub"></div><div class="meter" id="cMeterBox"><i id="cMeter"></i></div></div>
+      <div class="card"><div class="label" data-t="perDayTitle">Heute noch drin</div><div class="cardbig num" id="cDay">–</div><div class="sub" id="cDaySub"></div></div>
+    </div>
+    <button class="primary" id="quickAdd" type="button" data-t="quickAdd">+ Ausgabe eintragen</button>
+    <section class="panel">
+      <h2 data-t="openTitle">Noch offen in diesem Monat</h2>
+      <div id="openList"></div>
+    </section>
+  </section>
+
+  <!-- AUSGABEN -->
+  <section class="view" data-view="ausgaben" hidden>
+    <section class="panel">
+      <div class="label" data-t="spentTitle">Ausgaben im Monat (Budget)</div>
+      <div class="herobig num" id="total" style="color:var(--fg)">0</div>
+      <div class="sub" id="restLine"></div>
+      <div class="meter" id="meterBox"><i id="meter"></i></div>
+      <div class="split">
+        <span><span data-t="splitShop">Einkauf</span>: <b class="num" id="sumShop">0</b></span>
+        <span><span data-t="splitCar">Auto &amp; Fahren</span>: <b class="num" id="sumCar">0</b></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 data-t="addTitle">Ausgabe eintragen</h2>
+      <form id="form" autocomplete="off">
+        <div class="field"><label for="preis" data-t="fAmount">Betrag (€)</label>
+          <input id="preis" required inputmode="decimal" placeholder="0,00"></div>
+        <div class="field"><label for="kat" data-t="fWhat">Wofür?</label><select id="kat"></select></div>
+        <div class="field"><label for="laden" data-t="fWhere">Wo? (Laden)</label>
+          <input id="laden" list="laeden" data-tp="fWherePh" placeholder="z. B. Lidl"></div>
+        <datalist id="laeden"><option value="Lidl"><option value="Aldi"><option value="Edeka"><option value="Rewe"><option value="Penny"><option value="Netto"><option value="Kaufland"><option value="Globus"><option value="dm"><option value="Rossmann"></datalist>
+        <div class="field" id="werField"><label for="wer" data-t="fWho">Wer hat bezahlt?</label><select id="wer"></select></div>
+        <div class="field"><label for="datum" data-t="fDate">Datum</label><input id="datum" type="date" required></div>
+        <div class="field wide"><label for="notiz" data-t="fNote">Notiz (freiwillig)</label><input id="notiz" data-tp="fNotePh" placeholder="z. B. Wocheneinkauf"></div>
+        <button class="primary wide" id="addBtn" type="submit" data-t="save">Eintragen</button>
+        <p class="msg wide" id="msg" role="status"></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2 data-t="whereTitle">Wohin ging das Geld?</h2>
+      <div class="cats" id="cats"></div>
+    </section>
+
+    <section class="panel">
+      <h2 data-t="listTitle">Einträge</h2>
+      <div id="list"></div>
+    </section>
+  </section>
+
+  <!-- PLAN -->
+  <section class="view" data-view="plan" hidden>
+    <section class="panel">
+      <h2 data-t="planTitle">Haushaltsplan Einnahmen / Ausgaben</h2>
+      <div class="psum" id="planSum"></div>
+      <div class="pcards" id="partnerSum"></div>
+    </section>
+    <div class="chips" id="werChips"></div>
+    <p class="note" id="planPaidInfo"></p>
+    <div id="planEdit" class="pedit" hidden>
+      <h3 id="peTitle"></h3>
+      <div class="field"><label for="peName" data-t="peName">Name</label><input id="peName"></div>
+      <div class="grid2">
+        <div class="field"><label for="peBetrag" data-t="fAmount">Betrag (€)</label><input id="peBetrag" inputmode="decimal" placeholder="0,00"></div>
+        <div class="field"><label for="peRh" data-t="peHow">Wie oft?</label><select id="peRh"></select></div>
+        <div class="field"><label for="peGruppe" data-t="peCat">Kategorie</label><select id="peGruppe"></select></div>
+        <div class="field"><label for="peDatum" data-t="peDate">Buchungsdatum</label><input id="peDatum" type="date"></div>
+      </div>
+      <p class="note" id="peWerInfo"></p>
+      <div class="actions">
+        <button class="primary" id="peSave" type="button" data-t="saveShort">Speichern</button>
+        <button class="small" id="peCancel" type="button" data-t="cancel">Abbrechen</button>
+        <button class="small" id="peDel" type="button" data-t="delete">Löschen</button>
+      </div>
+      <p class="msg" id="peMsg" role="status"></p>
+    </div>
+    <div id="planGroups"></div>
+    <p class="note" data-t="planHint">Jeden Posten einmal mit Betrag anlegen. Jeden Monat dann nur noch abhaken, was bezahlt bzw. eingegangen ist.</p>
+  </section>
+
+  <!-- MEHR -->
+  <section class="view" data-view="mehr" hidden>
+    <section class="panel">
+      <h2 data-t="setLang">Sprache</h2>
+      <select id="langSel" aria-label="Sprache / Language">
+        <option value="auto" data-t="langAuto">Automatisch (wie Handy)</option>
+        <option value="de">Deutsch</option>
+        <option value="en">English</option>
+      </select>
+    </section>
+    <section class="panel">
+      <h2 data-t="setHousehold">Haushalt</h2>
+      <div class="setrow"><input type="checkbox" id="twoP"><label for="twoP" data-t="twoPeople">Zwei Personen (Partner 1 und Partner 2)</label></div>
+      <div class="grid2" id="namesBox">
+        <div class="field"><label for="n1" data-t="partner1">Partner 1</label><input id="n1"></div>
+        <div class="field"><label for="n2" data-t="partner2">Partner 2</label><input id="n2"></div>
+      </div>
+      <div class="field" style="margin-top:14px"><label for="budget" data-t="setBudget">Monatsbudget für Einkauf &amp; Auto (€)</label><input id="budget" inputmode="decimal" placeholder="400"></div>
+      <div class="actions" style="margin-top:14px"><button class="primary" id="setSave" type="button" data-t="saveShort">Speichern</button></div>
+      <p class="msg" id="setMsg" role="status"></p>
+    </section>
+    <section class="panel">
+      <h2 data-t="backupTitle">Datensicherung</h2>
+      <p class="note" data-t="backupText">Alle Einträge sind nur auf diesem Handy gespeichert. Mach ab und zu eine Sicherung, z. B. bevor du das Handy wechselst.</p>
+      <div class="actions" style="margin-top:12px">
+        <button class="small" id="exportBtn" type="button" data-t="backupSave">Sicherung speichern</button>
+        <label class="small filebtn" for="importFile" data-t="backupLoad">Sicherung laden</label>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
+      </div>
+      <p class="msg" id="backupMsg" role="status"></p>
+    </section>
+    <section class="panel">
+      <h2 data-t="privacyTitle">Datenschutz</h2>
+      <p class="note" data-t="privacyText">Diese App speichert alles nur auf deinem Gerät. Es gibt kein Konto, keine Werbung, keine Weitergabe an Dritte und keine Verbindung zu einem Server mit deinen Daten.</p>
+    </section>
+  </section>
+
+  <p class="foot" data-t="footer">Keine Werbung, kein Konto, keine Daten im Internet.</p>
+</main>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+
+// ===================== Texte (Deutsch / Englisch) =====================
+var TXT={
+ de:{appName:"Haushaltsplan",prevMonth:"Vorheriger Monat",nextMonth:"Nächster Monat",tabStart:"Übersicht",tabSpend:"Ausgaben",tabPlan:"Plan",tabMore:"Mehr",
+  freeTitle:"Diesen Monat frei verfügbar",budgetTitle:"Budget Einkauf & Auto",perDayTitle:"Heute noch drin",quickAdd:"+ Ausgabe eintragen",openTitle:"Noch offen in diesem Monat",
+  spentTitle:"Ausgaben im Monat (Budget)",splitShop:"Einkauf",splitCar:"Auto & Fahren",addTitle:"Ausgabe eintragen",fAmount:"Betrag (€)",fWhat:"Wofür?",fWhere:"Wo? (Laden)",fWherePh:"z. B. Lidl",
+  fWho:"Wer hat bezahlt?",fDate:"Datum",fNote:"Notiz (freiwillig)",fNotePh:"z. B. Wocheneinkauf",save:"Eintragen",saveShort:"Speichern",cancel:"Abbrechen",delete:"Löschen",reallyDelete:"Wirklich löschen?",
+  whereTitle:"Wohin ging das Geld?",listTitle:"Einträge",planTitle:"Haushaltsplan Einnahmen / Ausgaben",peName:"Name",peHow:"Wie oft?",peCat:"Kategorie",peDate:"Buchungsdatum",
+  planHint:"Jeden Posten einmal mit Betrag anlegen. Jeden Monat dann nur noch abhaken, was bezahlt bzw. eingegangen ist. Jährliche Beträge werden auf den Monat umgerechnet.",
+  setLang:"Sprache",langAuto:"Automatisch (wie Handy)",setHousehold:"Haushalt",twoPeople:"Zwei Personen (Partner 1 und Partner 2)",partner1:"Partner 1",partner2:"Partner 2",
+  setBudget:"Monatsbudget für Einkauf & Auto (€)",backupTitle:"Datensicherung",backupText:"Alle Einträge sind nur auf diesem Handy gespeichert. Mach ab und zu eine Sicherung, z. B. bevor du das Handy wechselst.",
+  backupSave:"Sicherung speichern",backupLoad:"Sicherung laden",privacyTitle:"Datenschutz",
+  privacyText:"Diese App speichert alles nur auf deinem Gerät. Es gibt kein Konto, keine Werbung, keine Weitergabe an Dritte und keine Verbindung zu einem Server mit deinen Daten.",
+  footer:"Keine Werbung, kein Konto, keine Daten im Internet.",
+  together:"Gemeinsam",all:"Alle",me:"Ich",
+  heroEmpty:"Trag im Plan eure Einnahmen und festen Ausgaben ein, dann seht ihr hier, was frei bleibt.",
+  heroCalc:"Einnahmen {a} − feste Kosten {b} − ausgegeben {c}",leftOf:"noch übrig von {a}",overBy:"drüber bei {a}",setBudgetHint:"Budget unter „Mehr“ festlegen",
+  perDay:"pro Tag, für die restlichen {n} Tage",perDay1:"pro Tag, für den letzten Tag",monthOver:"Monat ist vorbei",monthAhead:"Monat hat noch nicht begonnen",needsBudget:"braucht ein Budget",
+  dueOn:"fällig am {d}.",openSum:"Zusammen offen",allDone:"Alles erledigt, alle festen Posten sind abgehakt.",noPlan:"Noch keine festen Posten im Plan eingetragen.",
+  restLeft:"Noch übrig: {a} von {b}",restOver:"Über Budget: {a} (Budget {b})",noBudget:"Kein Budget festgelegt (unter „Mehr“).",
+  noSpend:"Noch keine Ausgaben in diesem Monat.",noEntries:"Für {m} ist noch nichts eingetragen.",shopless:"Einkauf ohne Laden",
+  saved:"Eingetragen: {a} – {b}",errAmount:"Den Betrag bitte als Zahl eingeben, z. B. 12,49.",errName:"Bitte einen Namen eintragen.",errAmount2:"Den Betrag bitte als Zahl eingeben, z. B. 19,99.",
+  errStore:"Speichern hat nicht geklappt. Der Speicher des Geräts ist voll oder gesperrt.",
+  inMonth:"Einnahmen im Monat",fixedMonth:"Feste Ausgaben im Monat",ofSaving:"davon Sparen",leftMonth:"Bleibt im Monat",
+  pIncome:"Einnahmen {a}",pOwn:"eigene Kosten {a}",pHalf:"Hälfte gemeinsam {a}",
+  paidInfo:"In {m} abgehakt: {a} von {b} Posten.",paidHint:"Tippe auf eine Kategorie und dann auf einen Posten, um den Betrag einzutragen.",
+  posts:"{n} Posten",ofPaid:"{a} von {b} bezahlt",ofRecv:"{a} von {b} eingegangen",enterAmount:"Betrag eintragen",perMonth:"{a} / Monat",
+  onDay:"am {d}. des Monats",onDate:"am {d}.{m}.",addItem:"+ Posten hinzufügen",noneHere:"Für diese Auswahl gibt es noch keine Posten.",
+  editItem:"Posten bearbeiten",newItem:"Neuer Posten",belongs:"Gehört zu: {a}",belongsHint:" (zum Ändern oben die Person wählen)",
+  markPaid:"{a} als bezahlt markieren",markRecv:"{a} als eingegangen markieren",
+  setSaved:"Gespeichert.",backupShared:"Sicherung geteilt.",backupDone:"Sicherung „{a}“ wurde gespeichert (Ordner Downloads).",backupLoaded:"Sicherung geladen: {n} Einträge.",backupBad:"Diese Datei ist keine Sicherung dieser App.",
+  rh1:"monatlich",rh3:"vierteljährlich",rh6:"halbjährlich",rh12:"jährlich",
+  g_ein:"Einnahmen",g_wohnen:"Wohnen",g_vertraege:"Verträge & Abos",g_vers:"Versicherungen",g_sparen:"Sparen",g_kredite:"Kredite",g_sonst:"Sonstiges",
+  k_einkauf:"Einkauf",k_tanken:"Tanken",k_auto:"Auto",k_fahrt:"Fahrkosten",k_sonst:"Sonstiges",
+  s_lohn1:"Lohn {a}",s_kindergeld:"Kindergeld",s_miete:"Miete",s_strom:"Strom",s_nk:"Nebenkosten",s_tv:"Bezahl-Fernsehen",s_handy:"Handyvertrag",s_internet:"Internetanbieter",s_zeitschrift:"Zeitschrift",
+  s_haft:"Haftpflicht",s_hausrat:"Hausrat",s_kfz:"KFZ-Versicherung",s_spar:"Eigenes Sparkonto",s_kind:"Kind {n}",s_kredit:"Kreditrate",s_karte:"Kreditkarte"},
+ en:{appName:"Household Planner",prevMonth:"Previous month",nextMonth:"Next month",tabStart:"Overview",tabSpend:"Spending",tabPlan:"Plan",tabMore:"More",
+  freeTitle:"Free to spend this month",budgetTitle:"Budget shopping & car",perDayTitle:"Left for today",quickAdd:"+ Add expense",openTitle:"Still open this month",
+  spentTitle:"Spent this month (budget)",splitShop:"Shopping",splitCar:"Car & travel",addTitle:"Add expense",fAmount:"Amount (€)",fWhat:"What for?",fWhere:"Where? (shop)",fWherePh:"e.g. Lidl",
+  fWho:"Who paid?",fDate:"Date",fNote:"Note (optional)",fNotePh:"e.g. weekly shopping",save:"Add",saveShort:"Save",cancel:"Cancel",delete:"Delete",reallyDelete:"Really delete?",
+  whereTitle:"Where did the money go?",listTitle:"Entries",planTitle:"Household plan income / expenses",peName:"Name",peHow:"How often?",peCat:"Category",peDate:"Payment date",
+  planHint:"Add each item once with its amount. Every month just tick off what has been paid or received. Yearly amounts are converted to a monthly figure.",
+  setLang:"Language",langAuto:"Automatic (phone language)",setHousehold:"Household",twoPeople:"Two people (partner 1 and partner 2)",partner1:"Partner 1",partner2:"Partner 2",
+  setBudget:"Monthly budget for shopping & car (€)",backupTitle:"Backup",backupText:"All entries are stored only on this phone. Make a backup now and then, e.g. before you switch phones.",
+  backupSave:"Save backup",backupLoad:"Load backup",privacyTitle:"Privacy",
+  privacyText:"This app stores everything only on your device. There is no account, no advertising, no sharing with third parties and no connection to a server with your data.",
+  footer:"No ads, no account, no data on the internet.",
+  together:"Shared",all:"All",me:"Me",
+  heroEmpty:"Enter your income and fixed costs in the plan to see what is left to spend.",
+  heroCalc:"Income {a} − fixed costs {b} − spent {c}",leftOf:"left of {a}",overBy:"over a budget of {a}",setBudgetHint:"Set a budget under “More”",
+  perDay:"per day for the remaining {n} days",perDay1:"per day for the last day",monthOver:"Month is over",monthAhead:"Month has not started yet",needsBudget:"needs a budget",
+  dueOn:"due on day {d}",openSum:"Total open",allDone:"All done, every fixed item is ticked off.",noPlan:"No fixed items in the plan yet.",
+  restLeft:"Left: {a} of {b}",restOver:"Over budget: {a} (budget {b})",noBudget:"No budget set (see “More”).",
+  noSpend:"No spending this month yet.",noEntries:"Nothing entered for {m} yet.",shopless:"Shopping, no shop",
+  saved:"Added: {a} – {b}",errAmount:"Please enter the amount as a number, e.g. 12.49.",errName:"Please enter a name.",errAmount2:"Please enter the amount as a number, e.g. 19.99.",
+  errStore:"Could not save. The device storage is full or blocked.",
+  inMonth:"Income per month",fixedMonth:"Fixed costs per month",ofSaving:"of which savings",leftMonth:"Left per month",
+  pIncome:"Income {a}",pOwn:"own costs {a}",pHalf:"half of shared {a}",
+  paidInfo:"Ticked off in {m}: {a} of {b} items.",paidHint:"Tap a category and then an item to enter its amount.",
+  posts:"{n} items",ofPaid:"{a} of {b} paid",ofRecv:"{a} of {b} received",enterAmount:"Enter amount",perMonth:"{a} / month",
+  onDay:"on day {d} of the month",onDate:"on {d}/{m}",addItem:"+ Add item",noneHere:"No items for this selection yet.",
+  editItem:"Edit item",newItem:"New item",belongs:"Belongs to: {a}",belongsHint:" (choose the person at the top to change)",
+  markPaid:"Mark {a} as paid",markRecv:"Mark {a} as received",
+  setSaved:"Saved.",backupShared:"Backup shared.",backupDone:"Backup “{a}” saved (Downloads folder).",backupLoaded:"Backup loaded: {n} entries.",backupBad:"This file is not a backup of this app.",
+  rh1:"monthly",rh3:"quarterly",rh6:"twice a year",rh12:"yearly",
+  g_ein:"Income",g_wohnen:"Housing",g_vertraege:"Contracts & subscriptions",g_vers:"Insurance",g_sparen:"Savings",g_kredite:"Loans",g_sonst:"Other",
+  k_einkauf:"Shopping",k_tanken:"Fuel",k_auto:"Car",k_fahrt:"Travel",k_sonst:"Other",
+  s_lohn1:"Salary {a}",s_kindergeld:"Child benefit",s_miete:"Rent",s_strom:"Electricity",s_nk:"Service charges",s_tv:"Pay TV",s_handy:"Mobile contract",s_internet:"Internet provider",s_zeitschrift:"Magazine",
+  s_haft:"Liability insurance",s_hausrat:"Home contents insurance",s_kfz:"Car insurance",s_spar:"Own savings account",s_kind:"Child {n}",s_kredit:"Loan repayment",s_karte:"Credit card"}
+};
+var LANG="de",LOC="de-DE",eur;
+function T(k,v){var s=(TXT[LANG]&&TXT[LANG][k])||TXT.de[k]||k;if(v)Object.keys(v).forEach(function(x){s=s.split("{"+x+"}").join(v[x])});return s}
+function setLang(pref){
+  var nav=(navigator.language||"de").slice(0,2).toLowerCase();
+  LANG=pref==="de"||pref==="en"?pref:(nav==="de"?"de":"en");
+  LOC=LANG==="de"?"de-DE":"en-IE";
+  eur=new Intl.NumberFormat(LOC,{style:"currency",currency:"EUR"});
+  document.documentElement.lang=LANG;document.title=T("appName");
+  document.querySelectorAll("[data-t]").forEach(function(el){el.textContent=T(el.dataset.t)});
+  document.querySelectorAll("[data-tp]").forEach(function(el){el.placeholder=T(el.dataset.tp)});
+  document.querySelectorAll("[data-ta]").forEach(function(el){el.setAttribute("aria-label",T(el.dataset.ta))});
+}
+
+// ===================== Daten (nur auf diesem Gerät) =====================
+var KEY="haushaltsplan-daten-v1",db=null;
+var GRUPPEN=["ein","wohnen","vertraege","vers","sparen","kredite","sonst"];
+var KATS=["einkauf","tanken","auto","fahrt","sonst"],AUTO=["tanken","auto","fahrt"];
+function neueId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function startPlan(){
+  var P=[["ein",T("s_lohn1",{a:1}),"p1"],["ein",T("s_lohn1",{a:2}),"p2"],["ein",T("s_kindergeld"),""],["wohnen",T("s_miete")],["wohnen",T("s_strom")],["wohnen",T("s_nk")],
+    ["vertraege",T("s_tv")],["vertraege",T("s_handy")],["vertraege",T("s_internet")],["vertraege",T("s_zeitschrift")],["vers",T("s_haft")],["vers",T("s_hausrat")],["vers",T("s_kfz")],
+    ["sparen",T("s_spar")],["sparen",T("s_kind",{n:1})],["sparen",T("s_kind",{n:2})],["kredite",T("s_kredit")],["kredite",T("s_karte")]];
+  var t=Date.now();return P.map(function(p,i){return{id:neueId()+i,gruppe:p[0],name:p[1],betrag:null,rhythmus:1,wer:p[2]||"",buchung:"",bezahlt:[],ord:t+i}});
+}
+function laden(){
+  try{db=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){db=null}
+  if(!db||typeof db!=="object")db={};
+  db.entries=Array.isArray(db.entries)?db.entries:[];db.budget=Number(db.budget)||0;
+  db.namen=db.namen||{p1:"",p2:""};db.zwei=db.zwei!==false;db.lang=db.lang||"auto";
+  setLang(db.lang);
+  if(!Array.isArray(db.plan)){db.plan=startPlan();speichern()}
+}
+function speichern(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){return false}}
+
+// ===================== Hilfen =====================
+function pad(n){return String(n).padStart(2,"0")}
+function today(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+var month=today().slice(0,7),tab="start",planWer="",editId=null,peWerVal="",delArm=false,confirmId=null,offen={};
+try{offen=JSON.parse(localStorage.getItem("haushaltsplan-offen")||"{}")||{}}catch(e){}
+function parseMoney(s){s=String(s||"").trim().replace(/\s|€/g,"");if(!s)return NaN;
+  if(s.indexOf(",")>=0)s=s.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");var n=Number(s);return isFinite(n)&&n>=0?Math.round(n*100)/100:NaN}
+function money(n){return eur.format(n)}
+function inputMoney(n){return n==null?"":(LANG==="de"?String(n).replace(".",","):String(n))}
+function monthName(m){var p=m.split("-");return new Date(+p[0],+p[1]-1,1).toLocaleDateString(LOC,{month:"long",year:"numeric"})}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function mIdx(m){var x=String(m).split("-");return (+x[0])*12+(+x[1])-1}
+function proMonat(p){return p.betrag?p.betrag/(p.rhythmus||1):0}
+function werName(w){return w==="p1"?(db.namen.p1||T("partner1")):w==="p2"?(db.namen.p2||T("partner2")):T("together")}
+function werPlan(p){return db.zwei?(p.wer||""):""}
+function werEntry(e){return db.zwei?(e.wer||""):""}
+function faellig(p,m){if(!p.buchung||(p.rhythmus||1)===1)return true;var d=mIdx(m)-mIdx(p.buchung.slice(0,7));return ((d%p.rhythmus)+p.rhythmus)%p.rhythmus===0}
+function erledigt(p,m){return p.bezahlt.some(function(x){var d=mIdx(m)-mIdx(x);return d>=0&&d<(p.rhythmus||1)})}
+function buchText(p){if(!p.buchung)return "";var d=+p.buchung.slice(8,10);return p.rhythmus>1?T("onDate",{d:d,m:p.buchung.slice(5,7)}):T("onDay",{d:d})}
+function katName(k){return T("k_"+k)}
+
+// ===================== Menüleiste =====================
+function showTab(t){tab=t;document.querySelectorAll(".view").forEach(function(v){v.hidden=v.dataset.view!==t});
+  document.querySelectorAll("#tabs button").forEach(function(b){if(b.dataset.tab===t)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  try{localStorage.setItem("haushaltsplan-tab",t)}catch(e){}}
+$("tabs").addEventListener("click",function(ev){var b=ev.target.closest("[data-tab]");if(b){showTab(b.dataset.tab);window.scrollTo(0,0)}});
+function shift(n){var p=month.split("-"),d=new Date(+p[0],+p[1]-1+n,1);month=d.getFullYear()+"-"+pad(d.getMonth()+1);render()}
+$("prev").onclick=function(){shift(-1)};$("next").onclick=function(){shift(1)};
+
+// ===================== Berechnungen =====================
+function rechne(){
+  var r={ein:0,aus:0,spar:0,ausg:0,shop:0,car:0,p:{p1:{ein:0,fix:0,ausg:0},p2:{ein:0,fix:0,ausg:0},"":{ein:0,fix:0,ausg:0}}};
+  db.plan.forEach(function(p){var m=proMonat(p),w=werPlan(p);if(p.gruppe==="ein"){r.ein+=m;r.p[w].ein+=m}else{r.aus+=m;r.p[w].fix+=m;if(p.gruppe==="sparen")r.spar+=m}});
+  db.entries.forEach(function(e){if(e.datum.indexOf(month)!==0)return;r.ausg+=e.preis;r.p[werEntry(e)].ausg+=e.preis;if(AUTO.indexOf(e.kat)>=0)r.car+=e.preis;else r.shop+=e.preis});
+  ["p1","p2"].forEach(function(w){var x=r.p[w],g=r.p[""];x.anteil=g.fix/2+g.ausg/2;x.einGes=x.ein+g.ein/2;x.bleibt=x.einGes-x.fix-x.ausg-x.anteil});
+  return r;
+}
+
+// ===================== Anzeige =====================
+function render(){
+  $("monthLabel").textContent=monthName(month);
+  var r=rechne();
+  renderStart(r);renderSpend(r);renderPlan(r);renderMore();
+}
+function renderStart(r){
+  if(!r.ein&&!r.aus){$("heroFree").textContent="–";$("heroSub").textContent=T("heroEmpty");$("heroCard").classList.remove("warn")}
+  else{var frei=r.ein-r.aus-r.ausg;$("heroFree").textContent=money(frei);$("heroCard").classList.toggle("warn",frei<0);
+    $("heroSub").textContent=T("heroCalc",{a:money(r.ein),b:money(r.aus),c:money(r.ausg)})}
+  var zeig=db.zwei&&db.plan.some(function(p){return p.wer&&p.betrag});
+  $("heroPart").innerHTML=zeig?["p1","p2"].map(function(w){return '<span>'+esc(werName(w))+': <b class="num">'+money(r.p[w].bleibt)+'</b></span>'}).join(""):"";
+  if(db.budget>0){var rest=db.budget-r.ausg;$("cBudget").textContent=money(rest);$("cBudget").classList.toggle("over",rest<0);
+    $("cBudgetSub").textContent=rest>=0?T("leftOf",{a:money(db.budget)}):T("overBy",{a:money(db.budget)});
+    $("cMeter").style.width=Math.min(100,r.ausg/db.budget*100)+"%";$("cMeterBox").classList.toggle("over",rest<0);
+    var now=new Date(),cur=now.getFullYear()+"-"+pad(now.getMonth()+1);
+    if(month===cur){var last=new Date(now.getFullYear(),now.getMonth()+1,0).getDate(),tage=last-now.getDate()+1;
+      $("cDay").textContent=money(Math.max(0,rest)/tage);$("cDaySub").textContent=tage===1?T("perDay1"):T("perDay",{n:tage})}
+    else{$("cDay").textContent="–";$("cDaySub").textContent=month<cur?T("monthOver"):T("monthAhead")}}
+  else{$("cBudget").textContent="–";$("cBudgetSub").textContent=T("setBudgetHint");$("cDay").textContent="–";$("cDaySub").textContent=T("needsBudget");$("cMeter").style.width="0"}
+  var off=db.plan.filter(function(p){return p.gruppe!=="ein"&&p.betrag&&faellig(p,month)&&!erledigt(p,month)})
+    .sort(function(a,b){var x=a.buchung?+a.buchung.slice(8,10):99,y=b.buchung?+b.buchung.slice(8,10):99;return x-y||a.ord-b.ord});
+  var sum=0;off.forEach(function(p){sum+=p.betrag});
+  $("openList").innerHTML=off.length?off.map(function(p){
+      return '<div class="orow"><button class="tick" type="button" data-tick="'+esc(p.id)+'" aria-label="'+esc(T("markPaid",{a:p.name}))+'">✓</button><span>'+esc(p.name)+
+      '<span class="sub" style="display:block">'+esc(T("g_"+p.gruppe))+(p.buchung?" · "+T("dueOn",{d:+p.buchung.slice(8,10)}):"")+(p.rhythmus>1?" · "+T("rh"+p.rhythmus):"")+'</span></span><span class="num">'+money(p.betrag)+'</span></div>'}).join("")+
+    '<div class="fixrow total"><b>'+esc(T("openSum"))+'</b><span class="num">'+money(sum)+'</span></div>'
+    :'<p class="empty">'+esc(db.plan.some(function(p){return p.betrag})?T("allDone"):T("noPlan"))+'</p>';
+}
+function renderSpend(r){
+  $("total").textContent=money(r.ausg);$("sumShop").textContent=money(r.shop);$("sumCar").textContent=money(r.car);
+  if(db.budget>0){var rest=db.budget-r.ausg;$("restLine").textContent=rest>=0?T("restLeft",{a:money(rest),b:money(db.budget)}):T("restOver",{a:money(-rest),b:money(db.budget)});
+    $("restLine").classList.toggle("over",rest<0);$("meterBox").hidden=false;$("meter").style.width=Math.min(100,r.ausg/db.budget*100)+"%";$("meterBox").classList.toggle("over",rest<0)}
+  else{$("restLine").textContent=T("noBudget");$("meterBox").hidden=true}
+  var mine=db.entries.filter(function(e){return e.datum.indexOf(month)===0}).sort(function(a,b){return b.datum.localeCompare(a.datum)||b.ts-a.ts});
+  var by={};mine.forEach(function(e){var k=e.kat==="einkauf"?(e.laden||T("shopless")):katName(e.kat);by[k]=(by[k]||0)+e.preis});
+  var arr=Object.keys(by).map(function(k){return[k,by[k]]}).sort(function(a,b){return b[1]-a[1]}),max=arr.length?arr[0][1]:0;
+  $("cats").innerHTML=arr.length?arr.map(function(c){return '<div class="cat"><span>'+esc(c[0])+'</span><span class="track"><i style="width:'+(max?c[1]/max*100:0)+'%"></i></span><span class="num">'+money(c[1])+'</span></div>'}).join(""):'<p class="empty">'+esc(T("noSpend"))+'</p>';
+  if(!mine.length){$("list").innerHTML='<p class="empty">'+esc(T("noEntries",{m:monthName(month)}))+'</p>';return}
+  var days={};mine.forEach(function(e){(days[e.datum]=days[e.datum]||[]).push(e)});
+  $("list").innerHTML=Object.keys(days).sort().reverse().map(function(d){
+    var items=days[d],s=0;items.forEach(function(e){s+=e.preis});
+    var dl=new Date(d+"T12:00:00").toLocaleDateString(LOC,{weekday:"long",day:"numeric",month:"long"});
+    return '<div class="day"><div class="dayhead"><span>'+esc(dl)+'</span><span class="num">'+money(s)+'</span></div>'+items.map(function(e){
+      var c=confirmId===e.id,title=e.kat==="einkauf"?(e.laden||katName(e.kat)):(e.laden?katName(e.kat)+" · "+e.laden:katName(e.kat));
+      return '<div class="row"><div class="what">'+esc(title)+'<div class="sub">'+esc([katName(e.kat),werEntry(e)?werName(e.wer):"",e.notiz].filter(Boolean).join(" · "))+'</div></div>'+
+        '<div class="num">'+money(e.preis)+'</div><button class="small'+(c?" danger":"")+'" type="button" data-del="'+esc(e.id)+'" aria-label="'+esc(T("delete"))+'">'+(c?esc(T("reallyDelete")):"✕")+'</button></div>'}).join("")+'</div>';
+  }).join("");
+}
+function renderPlan(r){
+  var items=db.plan.slice().sort(function(a,b){return a.ord-b.ord});
+  $("planSum").innerHTML='<span>'+esc(T("inMonth"))+'</span><span class="num">'+money(r.ein)+'</span><span>'+esc(T("fixedMonth"))+'</span><span class="num">− '+money(r.aus)+'</span>'+
+    (r.spar?'<span class="sub">'+esc(T("ofSaving"))+'</span><span class="num sub">'+money(r.spar)+'</span>':'')+
+    '<span class="big2">'+esc(T("leftMonth"))+'</span><span class="num big2'+(r.ein-r.aus<0?" over":"")+'">'+money(r.ein-r.aus)+'</span>';
+  $("partnerSum").hidden=!db.zwei;$("werChips").hidden=!db.zwei;
+  if(db.zwei){
+    $("partnerSum").innerHTML=["p1","p2"].map(function(w){var x=r.p[w];
+      return '<div class="pcard '+w+'"><div class="pcname">'+esc(werName(w))+'</div><div class="pcbig num'+(x.bleibt<0?" over":"")+'">'+money(x.bleibt)+'</div><div class="sub">'+
+        esc(T("pIncome",{a:money(x.einGes)}))+'<br>'+esc(T("pOwn",{a:money(x.fix+x.ausg)}))+'<br>'+esc(T("pHalf",{a:money(x.anteil)}))+'</div></div>'}).join("");
+    $("werChips").innerHTML=[["",T("all")],["p1",werName("p1")],["p2",werName("p2")],["both",T("together")]].map(function(c){
+      return '<button type="button" data-wer="'+c[0]+'" aria-pressed="'+(planWer===c[0])+'">'+esc(c[1])+'</button>'}).join("");
+  }else planWer="";
+  var anz=0,erl=0;items.forEach(function(p){if(p.betrag&&faellig(p,month)){anz++;if(erledigt(p,month))erl++}});
+  $("planPaidInfo").textContent=anz?T("paidInfo",{m:monthName(month),a:erl,b:anz}):T("paidHint");
+  var html="";
+  GRUPPEN.forEach(function(g){
+    var gi=items.filter(function(p){return p.gruppe===g&&(planWer===""||(planWer==="both"?!werPlan(p):werPlan(p)===planWer))});
+    if(!gi.length&&g==="sonst")return;
+    var sum=0,n=0,d=0;gi.forEach(function(p){sum+=proMonat(p);if(p.betrag&&faellig(p,month)){n++;if(erledigt(p,month))d++}});
+    var op=!!offen[g];
+    html+='<div class="pgroup'+(op?" isopen":"")+'"><button class="pghead" type="button" data-group="'+g+'" aria-expanded="'+op+'"><span class="pgplus" aria-hidden="true">'+(op?"−":"+")+'</span>'+
+      '<span class="pgname">'+esc(T("g_"+g))+'<span class="sub">'+esc(T("posts",{n:gi.length}))+(n?" · "+esc(T(g==="ein"?"ofRecv":"ofPaid",{a:d,b:n})):"")+'</span></span><span class="num">'+(sum?money(sum):"–")+'</span></button>';
+    if(op){html+='<div class="pgbody">';
+      gi.forEach(function(p){
+        var on=erledigt(p,month),w=werPlan(p);
+        var sub=p.betrag==null?'<span class="sub need">'+esc(T("enterAmount"))+'</span>':
+          '<span class="sub">'+money(p.betrag)+" "+esc(T("rh"+p.rhythmus))+(p.buchung?" · "+esc(buchText(p)):"")+(p.rhythmus>1?" · "+esc(T("perMonth",{a:money(proMonat(p))})):"")+'</span>';
+        html+='<div class="pitem"><button class="tick'+(on?" on":"")+'" type="button" data-tick="'+esc(p.id)+'" aria-pressed="'+on+'" aria-label="'+esc(T(g==="ein"?"markRecv":"markPaid",{a:p.name}))+'"'+(p.betrag==null?" disabled":"")+'>✓</button>'+
+          '<button class="pname" type="button" data-edit="'+esc(p.id)+'">'+esc(p.name)+(db.zwei?' <span class="badge '+(w||"both")+'">'+esc(werName(w))+'</span>':'')+sub+'</button>'+
+          '<span class="num">'+(p.betrag!=null?money(proMonat(p)):"–")+'</span></div>'});
+      html+='<button class="addp" type="button" data-add="'+g+'">'+esc(T("addItem"))+'</button></div>'}
+    html+='</div>';
+  });
+  $("planGroups").innerHTML=html||'<p class="empty">'+esc(T("noneHere"))+'</p>';
+}
+function renderMore(){
+  if(document.activeElement!==$("n1"))$("n1").value=db.namen.p1||"";
+  if(document.activeElement!==$("n2"))$("n2").value=db.namen.p2||"";
+  if(document.activeElement!==$("budget"))$("budget").value=db.budget?inputMoney(db.budget):"";
+  $("twoP").checked=db.zwei;$("namesBox").hidden=!db.zwei;$("langSel").value=db.lang;
+  $("n1").placeholder=T("partner1");$("n2").placeholder=T("partner2");
+  var k=$("kat").value;$("kat").innerHTML=KATS.map(function(x){return '<option value="'+x+'">'+esc(katName(x))+'</option>'}).join("");$("kat").value=k||"einkauf";
+  var w=$("wer").value;$("wer").innerHTML='<option value="">'+esc(T("together"))+'</option><option value="p1">'+esc(werName("p1"))+'</option><option value="p2">'+esc(werName("p2"))+'</option>';$("wer").value=w||"";
+  $("werField").hidden=!db.zwei;
+  var rh=$("peRh").value;$("peRh").innerHTML=[1,3,6,12].map(function(n){return '<option value="'+n+'">'+esc(T("rh"+n))+'</option>'}).join("");$("peRh").value=rh||"1";
+  var g=$("peGruppe").value;$("peGruppe").innerHTML=GRUPPEN.map(function(x){return '<option value="'+x+'">'+esc(T("g_"+x))+'</option>'}).join("");$("peGruppe").value=g||"sonst";
+}
+
+// ===================== Aktionen =====================
+function setMsg(el,t,err){$(el).textContent=t;$(el).className="msg"+(err?" err":"")+(el==="msg"?" wide":"")}
+$("quickAdd").onclick=function(){showTab("ausgaben");$("form").scrollIntoView({behavior:"smooth",block:"start"});$("preis").focus()};
+$("datum").value=today();
+$("form").addEventListener("submit",function(ev){
+  ev.preventDefault();var preis=parseMoney($("preis").value);
+  if(isNaN(preis)){setMsg("msg",T("errAmount"),true);return}
+  var e={id:neueId(),datum:$("datum").value||today(),preis:preis,kat:$("kat").value,laden:$("laden").value.trim().slice(0,60),notiz:$("notiz").value.trim().slice(0,200),wer:db.zwei?$("wer").value:"",ts:Date.now()};
+  db.entries.push(e);if(!speichern()){db.entries.pop();setMsg("msg",T("errStore"),true);return}
+  setMsg("msg",T("saved",{a:e.kat==="einkauf"?(e.laden||katName(e.kat)):katName(e.kat),b:money(preis)}));
+  $("preis").value="";$("laden").value="";$("notiz").value="";
+  if(e.datum.slice(0,7)!==month)month=e.datum.slice(0,7);render();$("preis").focus();
+});
+$("list").addEventListener("click",function(ev){var b=ev.target.closest("[data-del]");if(!b)return;var id=b.dataset.del;
+  if(confirmId!==id){confirmId=id;render();return}confirmId=null;db.entries=db.entries.filter(function(e){return e.id!==id});speichern();render()});
+function tick(id,an){var p=db.plan.filter(function(x){return x.id===id})[0];if(!p)return;
+  p.bezahlt=p.bezahlt.filter(function(m){return m!==month});if(an)p.bezahlt.push(month);speichern();render()}
+$("openList").addEventListener("click",function(ev){var t=ev.target.closest("[data-tick]");if(t)tick(t.dataset.tick,true)});
+$("werChips").addEventListener("click",function(ev){var b=ev.target.closest("[data-wer]");if(!b)return;planWer=b.dataset.wer;render()});
+$("planGroups").addEventListener("click",function(ev){
+  var t=ev.target.closest("[data-tick],[data-edit],[data-add],[data-group]");if(!t)return;
+  if(t.dataset.group){var g=t.dataset.group;if(offen[g])delete offen[g];else offen[g]=1;try{localStorage.setItem("haushaltsplan-offen",JSON.stringify(offen))}catch(e){}render();return}
+  if(t.dataset.add){openEdit(null,t.dataset.add);return}
+  var id=t.dataset.tick||t.dataset.edit,p=db.plan.filter(function(x){return x.id===id})[0];if(!p)return;
+  if(t.dataset.edit){openEdit(p);return}
+  tick(id,p.bezahlt.indexOf(month)<0);
+});
+function openEdit(p,g){
+  editId=p?p.id:null;delArm=false;
+  $("peTitle").textContent=p?T("editItem"):T("newItem");
+  $("peName").value=p?p.name:"";$("peBetrag").value=p&&p.betrag!=null?inputMoney(p.betrag):"";
+  $("peRh").value=String(p?p.rhythmus:1);$("peGruppe").value=p?p.gruppe:(g||"sonst");$("peDatum").value=p&&p.buchung?p.buchung:"";
+  peWerVal=p?(p.wer||""):(planWer==="p1"||planWer==="p2"?planWer:"");
+  var eff=planWer==="p1"||planWer==="p2"?planWer:planWer==="both"?"":peWerVal;
+  $("peWerInfo").hidden=!db.zwei;$("peWerInfo").textContent=T("belongs",{a:werName(eff)})+(planWer?"":T("belongsHint"));
+  $("peDel").hidden=!p;$("peDel").textContent=T("delete");$("peDel").classList.remove("danger");$("peMsg").textContent="";
+  $("planEdit").hidden=false;$("planEdit").scrollIntoView({behavior:"smooth",block:"center"});(p?$("peBetrag"):$("peName")).focus();
+}
+function closeEdit(){editId=null;$("planEdit").hidden=true}
+$("peCancel").onclick=closeEdit;
+$("peSave").onclick=function(){
+  var name=$("peName").value.trim().slice(0,60),v=$("peBetrag").value.trim(),b=v?parseMoney(v):null;
+  if(!name){setMsg("peMsg",T("errName"),true);return}
+  if(v&&isNaN(b)){setMsg("peMsg",T("errAmount2"),true);return}
+  var wer=planWer==="p1"||planWer==="p2"?planWer:planWer==="both"?"":peWerVal,g=$("peGruppe").value;
+  var d={name:name,betrag:b,rhythmus:Number($("peRh").value)||1,gruppe:GRUPPEN.indexOf(g)>=0?g:"sonst",wer:wer,buchung:/^\d{4}-\d{2}-\d{2}$/.test($("peDatum").value)?$("peDatum").value:""};
+  if(editId){db.plan.forEach(function(p){if(p.id===editId)Object.assign(p,d)})}else db.plan.push(Object.assign({id:neueId(),bezahlt:[],ord:Date.now()},d));
+  offen[d.gruppe]=1;try{localStorage.setItem("haushaltsplan-offen",JSON.stringify(offen))}catch(e){}
+  if(!speichern()){setMsg("peMsg",T("errStore"),true);return}closeEdit();render();
+};
+$("peDel").onclick=function(){if(!editId)return;if(!delArm){delArm=true;$("peDel").textContent=T("reallyDelete");$("peDel").classList.add("danger");return}
+  var id=editId;db.plan=db.plan.filter(function(p){return p.id!==id});speichern();closeEdit();render()};
+$("twoP").onchange=function(){$("namesBox").hidden=!this.checked};
+$("setSave").onclick=function(){
+  var v=$("budget").value.trim(),b=v?parseMoney(v):0;if(isNaN(b)){setMsg("setMsg",T("errAmount"),true);return}
+  db.budget=b;db.zwei=$("twoP").checked;db.namen={p1:$("n1").value.trim().slice(0,30),p2:$("n2").value.trim().slice(0,30)};
+  speichern();render();setMsg("setMsg",T("setSaved"));
+};
+$("langSel").onchange=function(){db.lang=this.value;speichern();setLang(db.lang);render()};
+$("exportBtn").onclick=function(){
+  var name="Haushaltsplan-"+today()+".json",text=JSON.stringify({app:"haushaltsplan",version:1,gesichert:new Date().toISOString(),daten:db},null,1);
+  try{var f=new File([text],name,{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:T("appName")}).then(function(){setMsg("backupMsg",T("backupShared"))}).catch(function(){});return}}catch(e){}
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"application/json"}));a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);setMsg("backupMsg",T("backupDone",{a:name}));
+};
+$("importFile").onchange=function(){
+  var file=this.files&&this.files[0];if(!file)return;var rd=new FileReader();
+  rd.onload=function(){try{var x=JSON.parse(rd.result);var d=x&&x.app==="haushaltsplan"?x.daten:null;if(!d||!Array.isArray(d.entries)||!Array.isArray(d.plan))throw 0;
+      localStorage.setItem(KEY,JSON.stringify(d));laden();render();setMsg("backupMsg",T("backupLoaded",{n:db.entries.length}))}
+    catch(e){setMsg("backupMsg",T("backupBad"),true)}};
+  rd.readAsText(file);this.value="";
+};
+
+// ===================== Start =====================
+laden();
+try{showTab(localStorage.getItem("haushaltsplan-tab")||"start")}catch(e){showTab("start")}
+render();
+document.addEventListener("visibilitychange",function(){if(!document.hidden){var t=today().slice(0,7);render()}});
+if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(function(){})}
+})();
+</script>
+</body>
+</html>
