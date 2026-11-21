@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.cleversparen26.twa",
+        "sha256_cert_fingerprints": ["46:89:78:B3:11:68:7F:17:A6:D3:AC:56:6F:A8:00:DB:93:85:15:7A:45:35:52:92:57:D3:B7:6F:2E:E1:7B:FC"]
+      }
+    }]
