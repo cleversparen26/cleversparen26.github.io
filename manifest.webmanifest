@@ -1,7 +1,7 @@
 {
- "name": "Haushaltsplan",
- "short_name": "Haushaltsplan",
- "description": "Einnahmen, feste Kosten, Budget und Ausgaben im Blick. Alle Daten bleiben auf dem Handy.",
+ "name": "CleverSparen – Haushaltsbuch",
+ "short_name": "CleverSparen",
+ "description": "Haushaltsbuch: Einnahmen, feste Kosten, Budget und Ausgaben im Blick – auch für Paare. Alle Daten bleiben auf dem Handy.",
  "lang": "de",
  "start_url": "./",
  "scope": "./",

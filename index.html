@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2f6b4f">
-<title>Haushaltsplan</title>
+<title>CleverSparen</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -24,7 +24,8 @@
 html,body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:18px;line-height:1.5;-webkit-text-size-adjust:100%}
 .wrap{max-width:720px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:18px}
-h1{font-size:1.5rem;margin:0}
+h1{font-size:1.5rem;margin:0;line-height:1.15}
+.slogan{display:block;font-size:.85rem;font-weight:400;color:var(--muted)}
 h2{font-size:1.15rem;margin:0 0 12px}
 h3{margin:0;font-size:1.05rem}
 button,input,select{font:inherit;color:inherit}
@@ -127,7 +128,7 @@ button.pcard{background:transparent;text-align:left;cursor:pointer;font:inherit;
 <body>
 <main class="wrap">
   <div class="top">
-    <h1 data-t="appName">Haushaltsplan</h1>
+    <h1><span data-t="appName">CleverSparen</span> <span class="slogan" data-t="slogan">Haushaltsbuch</span></h1>
     <div class="month">
       <button class="iconbtn" id="prev" type="button" data-ta="prevMonth" aria-label="Vorheriger Monat">‹</button>
       <span id="monthLabel">–</span>
@@ -279,7 +280,7 @@ var $=function(id){return document.getElementById(id)};
 
 // ===================== Texte (Deutsch / Englisch) =====================
 var TXT={
- de:{appName:"Haushaltsplan",prevMonth:"Vorheriger Monat",nextMonth:"Nächster Monat",tabStart:"Übersicht",tabSpend:"Ausgaben",tabPlan:"Plan",tabMore:"Mehr",
+ de:{appName:"CleverSparen",slogan:"Haushaltsbuch",prevMonth:"Vorheriger Monat",nextMonth:"Nächster Monat",tabStart:"Übersicht",tabSpend:"Ausgaben",tabPlan:"Plan",tabMore:"Mehr",
   freeTitle:"Diesen Monat frei verfügbar",budgetTitle:"Budget Einkauf & Auto",perDayTitle:"Heute noch drin",quickAdd:"+ Ausgabe eintragen",openTitle:"Noch offen in diesem Monat",
   spentTitle:"Ausgaben im Monat (Budget)",splitShop:"Einkauf",splitCar:"Auto & Fahren",addTitle:"Ausgabe eintragen",fAmount:"Betrag (€)",fWhat:"Wofür?",fWhere:"Wo? (Laden)",fWherePh:"z. B. Lidl",
   fWho:"Wer hat bezahlt?",fDate:"Datum",fNote:"Notiz (freiwillig)",fNotePh:"z. B. Wocheneinkauf",save:"Eintragen",saveShort:"Speichern",cancel:"Abbrechen",delete:"Löschen",reallyDelete:"Wirklich löschen?",
@@ -312,7 +313,7 @@ var TXT={
   k_einkauf:"Einkauf",k_tanken:"Tanken",k_auto:"Auto",k_fahrt:"Fahrkosten",k_sonst:"Sonstiges",
   s_lohn1:"Lohn {a}",s_kindergeld:"Kindergeld",s_miete:"Miete",s_strom:"Strom",s_nk:"Nebenkosten",s_tv:"Bezahl-Fernsehen",s_handy:"Handyvertrag",s_internet:"Internetanbieter",s_zeitschrift:"Zeitschrift",
   s_haft:"Haftpflicht",s_hausrat:"Hausrat",s_kfz:"KFZ-Versicherung",s_spar:"Eigenes Sparkonto",s_kind:"Kind {n}",s_kredit:"Kreditrate",s_karte:"Kreditkarte"},
- en:{appName:"Household Planner",prevMonth:"Previous month",nextMonth:"Next month",tabStart:"Overview",tabSpend:"Spending",tabPlan:"Plan",tabMore:"More",
+ en:{appName:"CleverSparen",slogan:"Household budget book",prevMonth:"Previous month",nextMonth:"Next month",tabStart:"Overview",tabSpend:"Spending",tabPlan:"Plan",tabMore:"More",
   freeTitle:"Free to spend this month",budgetTitle:"Budget shopping & car",perDayTitle:"Left for today",quickAdd:"+ Add expense",openTitle:"Still open this month",
   spentTitle:"Spent this month (budget)",splitShop:"Shopping",splitCar:"Car & travel",addTitle:"Add expense",fAmount:"Amount (€)",fWhat:"What for?",fWhere:"Where? (shop)",fWherePh:"e.g. Lidl",
   fWho:"Who paid?",fDate:"Date",fNote:"Note (optional)",fNotePh:"e.g. weekly shopping",save:"Add",saveShort:"Save",cancel:"Cancel",delete:"Delete",reallyDelete:"Really delete?",
@@ -579,7 +580,7 @@ $("setSave").onclick=function(){
 };
 $("langSel").onchange=function(){db.lang=this.value;speichern();setLang(db.lang);render()};
 $("exportBtn").onclick=function(){
-  var name="Haushaltsplan-"+today()+".json",text=JSON.stringify({app:"haushaltsplan",version:1,gesichert:new Date().toISOString(),daten:db},null,1);
+  var name="CleverSparen-Sicherung-"+today()+".json",text=JSON.stringify({app:"haushaltsplan",version:1,gesichert:new Date().toISOString(),daten:db},null,1);
   try{var f=new File([text],name,{type:"application/json"});
     if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:T("appName")}).then(function(){setMsg("backupMsg",T("backupShared"))}).catch(function(){});return}}catch(e){}
   var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"application/json"}));a.download=name;document.body.appendChild(a);a.click();
