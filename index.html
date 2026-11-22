@@ -34,8 +34,8 @@ button,input,select{font:inherit;color:inherit}
 .month{display:flex;align-items:center;gap:8px}
 .month span{font-weight:700;min-width:8.5em;text-align:center}
 .iconbtn{width:48px;height:48px;border-radius:10px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-size:1.3rem}
-.tabs{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:6px 4px;margin:0 -4px;background:var(--bg);border-bottom:1px solid var(--line)}
-.tabs button{min-height:52px;border:0;border-radius:10px;background:transparent;font-weight:700;font-size:.95rem;cursor:pointer;color:var(--muted);padding:4px 2px;line-height:1.15;overflow-wrap:anywhere}
+.tabs{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:6px 4px;margin:0 -4px;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabs button{min-height:52px;border:0;border-radius:10px;background:transparent;font-weight:700;font-size:.8rem;cursor:pointer;color:var(--muted);padding:4px 0;line-height:1.15;overflow-wrap:normal;white-space:nowrap;letter-spacing:-.01em}
 .tabs button[aria-current="page"]{background:var(--accent);color:var(--accent-fg)}
 .view{display:flex;flex-direction:column;gap:18px}
 .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px}
@@ -120,9 +120,25 @@ button.pcard{background:transparent;text-align:left;cursor:pointer;font:inherit;
 .note{color:var(--muted);font-size:.92rem;margin:0}
 .filebtn{display:inline-flex;align-items:center}
 .foot{color:var(--muted);font-size:.85rem;text-align:center;margin:0}
+.lhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px}
+.sitem{display:grid;grid-template-columns:48px 1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.sitem:last-child{border-bottom:0}
+.sitem.done .sname{text-decoration:line-through;color:var(--muted)}
+.sname{min-width:0;overflow-wrap:anywhere;font-size:1.05rem}
+.qty{font-family:var(--mono);color:var(--muted);white-space:nowrap}
+.xbtn{border:0;background:transparent;color:var(--muted);font-size:1.3rem;min-width:44px;min-height:44px;cursor:pointer}
+.scat{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 2px}
+.scat:first-child{margin-top:0}
+.addrow{display:grid;grid-template-columns:1fr 60px;gap:8px}
+.addrow .primary{min-height:52px;font-size:1.6rem;padding:0}
+.prods{display:flex;flex-wrap:wrap;gap:8px;padding:10px 4px 6px}
+.prod{border:1px solid var(--line);background:var(--paper);border-radius:999px;min-height:46px;padding:0 14px;font-size:1rem;cursor:pointer}
+.prod.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:700}
+.prod .pl{font-weight:700;color:var(--accent);margin-right:4px}
+.prod.on .pl{color:inherit}
 [hidden]{display:none!important}
 @media (max-width:520px){form,.grid2{grid-template-columns:1fr}}
-@media (max-width:380px){.cards,.pcards{grid-template-columns:1fr}.tabs button{font-size:.82rem}.herobig{font-size:2.1rem}}
+@media (max-width:380px){.cards,.pcards{grid-template-columns:1fr}.tabs button{font-size:.72rem}.herobig{font-size:2.1rem}}
 </style>
 </head>
 <body>
@@ -137,8 +153,9 @@ button.pcard{background:transparent;text-align:left;cursor:pointer;font:inherit;
   </div>
 
   <nav class="tabs" id="tabs">
-    <button type="button" data-tab="start" data-t="tabStart">Übersicht</button>
+    <button type="button" data-tab="start" data-t="tabStart">Start</button>
     <button type="button" data-tab="ausgaben" data-t="tabSpend">Ausgaben</button>
+    <button type="button" data-tab="einkauf" data-t="tabShop">Einkauf</button>
     <button type="button" data-tab="plan" data-t="tabPlan">Plan</button>
     <button type="button" data-tab="mehr" data-t="tabMore">Mehr</button>
   </nav>
@@ -233,6 +250,22 @@ button.pcard{background:transparent;text-align:left;cursor:pointer;font:inherit;
     <p class="note" data-t="planHint">Jeden Posten einmal mit Betrag anlegen. Jeden Monat dann nur noch abhaken, was bezahlt bzw. eingegangen ist.</p>
   </section>
 
+  <!-- EINKAUF -->
+  <section class="view" data-view="einkauf" hidden>
+    <section class="panel">
+      <div class="lhead"><h2 style="margin:0" data-t="listTitle2">Einkaufszettel</h2><span class="sub" id="listCount"></span></div>
+      <div id="shopList"></div>
+      <div class="actions" id="listActions" style="margin-top:12px">
+        <button class="small" id="clearDone" type="button" data-t="clearDone">Erledigte entfernen</button>
+        <button class="small" id="clearAll" type="button" data-t="clearAll">Alles löschen</button>
+        <button class="small" id="toSpend" type="button" data-t="toSpend">Einkauf als Ausgabe eintragen</button>
+      </div>
+    </section>
+    <div class="field"><label for="prodSearch" data-t="searchLbl">Produkt suchen oder eigenes eintragen</label>
+      <div class="addrow"><input id="prodSearch" data-tp="searchPh" placeholder="z. B. Milch" autocomplete="off"><button class="primary" id="addOwn" type="button" aria-label="+">+</button></div></div>
+    <div id="prodGroups"></div>
+  </section>
+
   <!-- MEHR -->
   <section class="view" data-view="mehr" hidden>
     <section class="panel">
@@ -280,7 +313,7 @@ var $=function(id){return document.getElementById(id)};
 
 // ===================== Texte (Deutsch / Englisch) =====================
 var TXT={
- de:{appName:"CleverSparen",slogan:"Haushaltsbuch",prevMonth:"Vorheriger Monat",nextMonth:"Nächster Monat",tabStart:"Übersicht",tabSpend:"Ausgaben",tabPlan:"Plan",tabMore:"Mehr",
+ de:{tabShop:"Einkauf",listTitle2:"Einkaufszettel",clearDone:"Erledigte entfernen",clearAll:"Alles löschen",toSpend:"Einkauf als Ausgabe eintragen",searchLbl:"Produkt suchen oder eigenes eintragen",searchPh:"z. B. Milch",listEmpty:"Der Einkaufszettel ist leer. Tippe unten auf eine Kategorie und dann auf die Produkte.",listN:"{a} von {b} erledigt",reallyClear:"Wirklich alles löschen?",ownItems:"Eigene Produkte",noFound:"Nichts gefunden. Mit + als eigenes Produkt hinzufügen.",added:"„{a}“ steht auf dem Zettel.",appName:"CleverSparen",slogan:"Haushaltsbuch",prevMonth:"Vorheriger Monat",nextMonth:"Nächster Monat",tabStart:"Start",tabSpend:"Ausgaben",tabPlan:"Plan",tabMore:"Mehr",
   freeTitle:"Diesen Monat frei verfügbar",budgetTitle:"Budget Einkauf & Auto",perDayTitle:"Heute noch drin",quickAdd:"+ Ausgabe eintragen",openTitle:"Noch offen in diesem Monat",
   spentTitle:"Ausgaben im Monat (Budget)",splitShop:"Einkauf",splitCar:"Auto & Fahren",addTitle:"Ausgabe eintragen",fAmount:"Betrag (€)",fWhat:"Wofür?",fWhere:"Wo? (Laden)",fWherePh:"z. B. Lidl",
   fWho:"Wer hat bezahlt?",fDate:"Datum",fNote:"Notiz (freiwillig)",fNotePh:"z. B. Wocheneinkauf",save:"Eintragen",saveShort:"Speichern",cancel:"Abbrechen",delete:"Löschen",reallyDelete:"Wirklich löschen?",
@@ -303,7 +336,7 @@ var TXT={
   inMonth:"Einnahmen im Monat",fixedMonth:"Feste Ausgaben im Monat",ofSaving:"davon Sparen",leftMonth:"Bleibt im Monat",
   pIncome:"Einnahmen {a}",pOwn:"eigene Kosten {a}",pHalf:"Hälfte gemeinsam {a}",
   paidInfo:"In {m} abgehakt: {a} von {b} Posten.",paidHint:"Tippe auf eine Kategorie und dann auf einen Posten, um den Betrag einzutragen.",
-  posts:"{n} Posten",ofPaid:"{a} von {b} bezahlt",ofRecv:"{a} von {b} eingegangen",enterAmount:"Betrag eintragen",perMonth:"{a} / Monat",
+  posts:"{n} Posten",posts1:"1 Posten",ofPaid:"{a} von {b} bezahlt",ofRecv:"{a} von {b} eingegangen",enterAmount:"Betrag eintragen",perMonth:"{a} / Monat",
   onDay:"am {d}. des Monats",onDate:"am {d}.{m}.",addItem:"+ Posten hinzufügen",noneHere:"Für diese Auswahl gibt es noch keine Posten.",
   editItem:"Posten bearbeiten",newItem:"Neuer Posten",belongs:"Gehört zu: {a}",belongsHint:" (zum Ändern oben die Person wählen)",
   markPaid:"{a} als bezahlt markieren",markRecv:"{a} als eingegangen markieren",
@@ -313,7 +346,7 @@ var TXT={
   k_einkauf:"Einkauf",k_tanken:"Tanken",k_auto:"Auto",k_fahrt:"Fahrkosten",k_sonst:"Sonstiges",
   s_lohn1:"Lohn {a}",s_kindergeld:"Kindergeld",s_miete:"Miete",s_strom:"Strom",s_nk:"Nebenkosten",s_tv:"Bezahl-Fernsehen",s_handy:"Handyvertrag",s_internet:"Internetanbieter",s_zeitschrift:"Zeitschrift",
   s_haft:"Haftpflicht",s_hausrat:"Hausrat",s_kfz:"KFZ-Versicherung",s_spar:"Eigenes Sparkonto",s_kind:"Kind {n}",s_kredit:"Kreditrate",s_karte:"Kreditkarte"},
- en:{appName:"CleverSparen",slogan:"Household budget book",prevMonth:"Previous month",nextMonth:"Next month",tabStart:"Overview",tabSpend:"Spending",tabPlan:"Plan",tabMore:"More",
+ en:{tabShop:"Shopping",listTitle2:"Shopping list",clearDone:"Remove ticked",clearAll:"Clear all",toSpend:"Enter shopping as expense",searchLbl:"Search a product or add your own",searchPh:"e.g. milk",listEmpty:"Your shopping list is empty. Tap a category below and then the products.",listN:"{a} of {b} done",reallyClear:"Really clear everything?",ownItems:"My products",noFound:"Nothing found. Use + to add it as your own product.",added:"“{a}” is on the list.",appName:"CleverSparen",slogan:"Household budget book",prevMonth:"Previous month",nextMonth:"Next month",tabStart:"Home",tabSpend:"Spending",tabPlan:"Plan",tabMore:"More",
   freeTitle:"Free to spend this month",budgetTitle:"Budget shopping & car",perDayTitle:"Left for today",quickAdd:"+ Add expense",openTitle:"Still open this month",
   spentTitle:"Spent this month (budget)",splitShop:"Shopping",splitCar:"Car & travel",addTitle:"Add expense",fAmount:"Amount (€)",fWhat:"What for?",fWhere:"Where? (shop)",fWherePh:"e.g. Lidl",
   fWho:"Who paid?",fDate:"Date",fNote:"Note (optional)",fNotePh:"e.g. weekly shopping",save:"Add",saveShort:"Save",cancel:"Cancel",delete:"Delete",reallyDelete:"Really delete?",
@@ -336,7 +369,7 @@ var TXT={
   inMonth:"Income per month",fixedMonth:"Fixed costs per month",ofSaving:"of which savings",leftMonth:"Left per month",
   pIncome:"Income {a}",pOwn:"own costs {a}",pHalf:"half of shared {a}",
   paidInfo:"Ticked off in {m}: {a} of {b} items.",paidHint:"Tap a category and then an item to enter its amount.",
-  posts:"{n} items",ofPaid:"{a} of {b} paid",ofRecv:"{a} of {b} received",enterAmount:"Enter amount",perMonth:"{a} / month",
+  posts:"{n} items",posts1:"1 item",ofPaid:"{a} of {b} paid",ofRecv:"{a} of {b} received",enterAmount:"Enter amount",perMonth:"{a} / month",
   onDay:"on day {d} of the month",onDate:"on {d}/{m}",addItem:"+ Add item",noneHere:"No items for this selection yet.",
   editItem:"Edit item",newItem:"New item",belongs:"Belongs to: {a}",belongsHint:" (choose the person at the top to change)",
   markPaid:"Mark {a} as paid",markRecv:"Mark {a} as received",
@@ -375,7 +408,7 @@ function laden(){
   try{db=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){db=null}
   if(!db||typeof db!=="object")db={};
   db.entries=Array.isArray(db.entries)?db.entries:[];db.budget=Number(db.budget)||0;
-  db.namen=db.namen||{p1:"",p2:""};db.zwei=db.zwei!==false;db.lang=db.lang||"auto";
+  db.namen=db.namen||{p1:"",p2:""};db.liste=Array.isArray(db.liste)?db.liste:[];db.eigene=Array.isArray(db.eigene)?db.eigene:[];db.zwei=db.zwei!==false;db.lang=db.lang||"auto";
   setLang(db.lang);
   if(!Array.isArray(db.plan)){db.plan=startPlan();speichern()}
 }
@@ -423,7 +456,7 @@ function rechne(){
 function render(){
   $("monthLabel").textContent=monthName(month);
   var r=rechne();
-  renderStart(r);renderSpend(r);renderPlan(r);renderMore();
+  renderStart(r);renderSpend(r);renderPlan(r);renderMore();renderShop();
 }
 function renderStart(r){
   if(!r.ein&&!r.aus){$("heroFree").textContent="–";$("heroSub").textContent=T("heroEmpty");$("heroCard").classList.remove("warn")}
@@ -491,7 +524,7 @@ function renderPlan(r){
     var sum=0,n=0,d=0;gi.forEach(function(p){sum+=proMonat(p);if(p.betrag&&faellig(p,month)){n++;if(erledigt(p,month))d++}});
     var op=!!offen[g];
     html+='<div class="pgroup'+(op?" isopen":"")+'"><button class="pghead" type="button" data-group="'+g+'" aria-expanded="'+op+'"><span class="pgplus" aria-hidden="true">'+(op?"−":"+")+'</span>'+
-      '<span class="pgname">'+esc(T("g_"+g))+'<span class="sub">'+esc(T("posts",{n:gi.length}))+(n?" · "+esc(T(g==="ein"?"ofRecv":"ofPaid",{a:d,b:n})):"")+'</span></span><span class="num">'+(sum?money(sum):"–")+'</span></button>';
+      '<span class="pgname">'+esc(T("g_"+g))+'<span class="sub">'+esc(gi.length===1?T("posts1"):T("posts",{n:gi.length}))+(n?" · "+esc(T(g==="ein"?"ofRecv":"ofPaid",{a:d,b:n})):"")+'</span></span><span class="num">'+(sum?money(sum):"–")+'</span></button>';
     if(op){html+='<div class="pgbody">';
       gi.forEach(function(p){
         var on=erledigt(p,month),w=werPlan(p);
@@ -593,6 +626,91 @@ $("importFile").onchange=function(){
     catch(e){setMsg("backupMsg",T("backupBad"),true)}};
   rd.readAsText(file);this.value="";
 };
+
+
+// ===================== Einkaufszettel =====================
+var PRODUKTE={
+ back:["Baguette|Baguette","Brötchen|Bread rolls","Croissants|Croissants","Knäckebrot|Crispbread","Laugengebäck|Pretzels","Mischbrot|Mixed bread","Toastbrot|Toast bread","Vollkornbrot|Wholemeal bread","Wraps|Wraps","Zwieback|Rusks"],
+ drog:["Deo|Deodorant","Duschgel|Shower gel","Rasierer|Razors","Seife|Soap","Shampoo|Shampoo","Taschentücher|Tissues","Toilettenpapier|Toilet paper","Windeln|Nappies","Zahnbürste|Toothbrush","Zahnpasta|Toothpaste"],
+ fleisch:["Fischstäbchen|Fish fingers","Hackfleisch|Minced meat","Hähnchenbrust|Chicken breast","Hähnchenschenkel|Chicken legs","Lachs|Salmon","Putenschnitzel|Turkey escalope","Rindfleisch|Beef","Schweinekotelett|Pork chops","Schweineschnitzel|Pork escalope","Thunfisch|Tuna"],
+ gemuese:["Blumenkohl|Cauliflower","Brokkoli|Broccoli","Gurke|Cucumber","Karotten|Carrots","Kartoffeln|Potatoes","Knoblauch|Garlic","Kopfsalat|Lettuce","Paprika|Peppers","Pilze|Mushrooms","Tomaten|Tomatoes","Zucchini|Courgette","Zwiebeln|Onions"],
+ getraenke:["Apfelsaft|Apple juice","Bier|Beer","Cola|Cola","Kaffee|Coffee","Mineralwasser|Mineral water","Orangensaft|Orange juice","Tee|Tea","Wein|Wine"],
+ gewuerze:["Backpulver|Baking powder","Essig|Vinegar","Ketchup|Ketchup","Mehl|Flour","Öl|Oil","Pfeffer|Pepper","Salz|Salt","Senf|Mustard","Zucker|Sugar"],
+ haushalt:["Alufolie|Aluminium foil","Batterien|Batteries","Gefrierbeutel|Freezer bags","Küchenrolle|Kitchen roll","Müllbeutel|Bin bags","Putzmittel|Cleaning agent","Spülmaschinentabs|Dishwasher tabs","Spülmittel|Washing-up liquid","Waschmittel|Laundry detergent"],
+ konserven:["Bohnen|Beans","Erbsen und Möhren|Peas and carrots","Fertigsuppe|Instant soup","Gehackte Tomaten|Chopped tomatoes","Kichererbsen|Chickpeas","Kidneybohnen|Kidney beans","Mais|Sweetcorn","Passierte Tomaten|Passata","Ravioli|Ravioli","Thunfischdose|Canned tuna"],
+ kuehl:["Butter|Butter","Eier|Eggs","Frischkäse|Cream cheese","Joghurt|Yoghurt","Margarine|Margarine","Milch|Milk","Pudding|Pudding","Quark|Quark","Sahne|Cream","Schmand|Sour cream"],
+ obst:["Ananas|Pineapple","Äpfel|Apples","Bananen|Bananas","Birnen|Pears","Erdbeeren|Strawberries","Kiwis|Kiwis","Mandarinen|Tangerines","Orangen|Oranges","Trauben|Grapes","Zitronen|Lemons"],
+ suess:["Chips|Crisps","Erdnüsse|Peanuts","Gummibärchen|Gummy bears","Kekse|Biscuits","Marmelade|Jam","Müsli|Muesli","Nuss-Nougat-Creme|Chocolate spread","Schokolade|Chocolate"],
+ teig:["Haferflocken|Oats","Lasagneplatten|Lasagne sheets","Nudeln|Pasta","Reis|Rice","Spaghetti|Spaghetti","Spätzle|Spaetzle"],
+ tk:["Eis|Ice cream","Gemüsemischung|Mixed vegetables","Pizza|Pizza","Pommes|Chips (fries)","Rahmspinat|Creamed spinach","Fisch (TK)|Frozen fish"],
+ wurst:["Aufschnitt|Cold cuts","Bergkäse|Mountain cheese","Gouda|Gouda","Leberwurst|Liver sausage","Mozzarella|Mozzarella","Salami|Salami","Schinken|Ham","Wiener Würstchen|Frankfurters"]
+};
+var KAT_NAMEN={de:{back:"Backwaren",drog:"Drogerie & Hygiene",fleisch:"Fleisch & Fisch",gemuese:"Gemüse",getraenke:"Getränke",gewuerze:"Gewürze & Backzutaten",haushalt:"Haushalt",konserven:"Konserven",kuehl:"Kühlregal & Milchprodukte",obst:"Obst",suess:"Süßes & Snacks",teig:"Teigwaren & Reis",tk:"Tiefkühlkost",wurst:"Wurst & Käse",eigene:"Eigene Produkte"},
+ en:{back:"Bakery",drog:"Toiletries",fleisch:"Meat & fish",gemuese:"Vegetables",getraenke:"Drinks",gewuerze:"Spices & baking",haushalt:"Household",konserven:"Tinned food",kuehl:"Dairy & chilled",obst:"Fruit",suess:"Sweets & snacks",teig:"Pasta & rice",tk:"Frozen food",wurst:"Cold cuts & cheese",eigene:"My products"}};
+function pName(x){var p=x.split("|");return LANG==="en"?(p[1]||p[0]):p[0]}
+function katN(k){return (KAT_NAMEN[LANG]||KAT_NAMEN.de)[k]||k}
+var shopOpen={};try{shopOpen=JSON.parse(localStorage.getItem("cleversparen-kat")||"{}")||{}}catch(e){}
+function aufListe(name){var n=name.trim().toLowerCase();return db.liste.filter(function(x){return x.name.toLowerCase()===n&&!x.erledigt})[0]}
+function addProdukt(name,kat){
+  name=name.trim().slice(0,60);if(!name)return;
+  var x=aufListe(name);if(x)x.menge=(x.menge||1)+1;else db.liste.push({id:neueId(),name:name,kat:kat||"eigene",menge:1,erledigt:false});
+  speichern();renderShop();
+}
+function sortiert(arr){return arr.slice().sort(function(a,b){return a.localeCompare(b,LOC,{sensitivity:"base"})})}
+function renderShop(){
+  // Zettel, nach Kategorie gruppiert
+  var L=db.liste,done=L.filter(function(x){return x.erledigt}).length;
+  $("listCount").textContent=L.length?T("listN",{a:done,b:L.length}):"";
+  $("listActions").hidden=!L.length;
+  if(!L.length)$("shopList").innerHTML='<p class="empty">'+esc(T("listEmpty"))+'</p>';
+  else{var gr={};L.forEach(function(x){(gr[x.kat]=gr[x.kat]||[]).push(x)});
+    var ks=Object.keys(gr).sort(function(a,b){return katN(a).localeCompare(katN(b),LOC)});
+    $("shopList").innerHTML=ks.map(function(k){
+      var items=gr[k].sort(function(a,b){return (a.erledigt-b.erledigt)||a.name.localeCompare(b.name,LOC)});
+      return '<div class="scat">'+esc(katN(k))+'</div>'+items.map(function(x){
+        return '<div class="sitem'+(x.erledigt?" done":"")+'"><button class="tick'+(x.erledigt?" on":"")+'" type="button" data-shtick="'+esc(x.id)+'" aria-pressed="'+x.erledigt+'" aria-label="'+esc(x.name)+'">✓</button>'+
+          '<span class="sname">'+esc(x.name)+'</span><span class="qty">'+(x.menge>1?x.menge+"×":"")+'</span><button class="xbtn" type="button" data-shdel="'+esc(x.id)+'" aria-label="'+esc(T("delete"))+'">✕</button></div>'}).join("")}).join("")}
+  // Produktgruppen, alphabetisch
+  var q=$("prodSearch").value.trim().toLowerCase();
+  var kats=Object.keys(PRODUKTE);if(db.eigene.length)kats.push("eigene");
+  kats.sort(function(a,b){return katN(a).localeCompare(katN(b),LOC)});
+  var html="",treffer=0;
+  kats.forEach(function(k){
+    var namen=k==="eigene"?db.eigene.map(function(e){return e.name}):PRODUKTE[k].map(pName);
+    namen=sortiert(namen);
+    if(q)namen=namen.filter(function(n){return n.toLowerCase().indexOf(q)>=0});
+    if(q&&!namen.length)return;treffer+=namen.length;
+    var op=q?true:!!shopOpen[k];
+    html+='<div class="pgroup'+(op?" isopen":"")+'"><button class="pghead" type="button" data-kat="'+k+'" aria-expanded="'+op+'"><span class="pgplus" aria-hidden="true">'+(op?"−":"+")+'</span><span class="pgname">'+esc(katN(k))+'<span class="sub">'+esc(namen.length===1?T("posts1"):T("posts",{n:namen.length}))+'</span></span><span></span></button>';
+    if(op)html+='<div class="prods">'+namen.map(function(n){var on=!!aufListe(n);
+      return '<button class="prod'+(on?" on":"")+'" type="button" data-prod="'+esc(n)+'" data-pk="'+k+'"><span class="pl">'+(on?"✓":"+")+'</span>'+esc(n)+'</button>'}).join("")+'</div>';
+    html+='</div>';
+  });
+  $("prodGroups").innerHTML=html||'<p class="empty">'+esc(T("noFound"))+'</p>';
+}
+$("prodGroups").addEventListener("click",function(ev){
+  var h=ev.target.closest("[data-kat]");
+  if(h){var k=h.dataset.kat;if(shopOpen[k])delete shopOpen[k];else shopOpen[k]=1;try{localStorage.setItem("cleversparen-kat",JSON.stringify(shopOpen))}catch(e){}renderShop();return}
+  var p=ev.target.closest("[data-prod]");if(p)addProdukt(p.dataset.prod,p.dataset.pk);
+});
+$("shopList").addEventListener("click",function(ev){
+  var t=ev.target.closest("[data-shtick]"),d=ev.target.closest("[data-shdel]");
+  if(t){db.liste.forEach(function(x){if(x.id===t.dataset.shtick)x.erledigt=!x.erledigt});speichern();renderShop()}
+  if(d){db.liste=db.liste.filter(function(x){return x.id!==d.dataset.shdel});speichern();renderShop()}
+});
+$("prodSearch").addEventListener("input",renderShop);
+function addOwn(){var v=$("prodSearch").value.trim().slice(0,60);if(!v)return;
+  var bekannt=false;Object.keys(PRODUKTE).forEach(function(k){PRODUKTE[k].forEach(function(x){if(pName(x).toLowerCase()===v.toLowerCase()){bekannt=k}})});
+  if(!bekannt&&!db.eigene.some(function(e){return e.name.toLowerCase()===v.toLowerCase()}))db.eigene.push({name:v});
+  addProdukt(bekannt?pName(PRODUKTE[bekannt].filter(function(x){return pName(x).toLowerCase()===v.toLowerCase()})[0]):v,bekannt||"eigene");
+  $("prodSearch").value="";renderShop();$("prodSearch").focus()}
+$("addOwn").onclick=addOwn;
+$("prodSearch").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();addOwn()}});
+$("clearDone").onclick=function(){db.liste=db.liste.filter(function(x){return !x.erledigt});speichern();renderShop()};
+var clearArm=false;
+$("clearAll").onclick=function(){if(!clearArm){clearArm=true;this.textContent=T("reallyClear");this.classList.add("danger");return}
+  clearArm=false;this.textContent=T("clearAll");this.classList.remove("danger");db.liste=[];speichern();renderShop()};
+$("toSpend").onclick=function(){showTab("ausgaben");$("kat").value="einkauf";$("form").scrollIntoView({behavior:"smooth",block:"start"});$("preis").focus()};
 
 // ===================== Start =====================
 laden();
